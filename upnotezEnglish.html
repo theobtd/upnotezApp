@@ -1,0 +1,1165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome</title>
+    <script src="https://www.gstatic.com/firebasejs/9.9.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.9.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.9.0/firebase-database-compat.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; margin: 0; }
+
+        #info-box {
+            position: absolute;
+            left: 2%;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 15%;
+            height: 75%;
+            background-color: transparent;
+            border: 2px solid black;
+            border-radius: 8px; /* Rounded corners */
+            padding: 10px;
+            overflow: hidden;
+        }
+
+        .common-button {
+            position: absolute;
+            left: 2%;
+            top: 4%
+            padding: 10px;  /* Adjust padding for height */
+            width: 16%;   /* Set a fixed width */
+            height: 7%;
+            font-size: 18px; /* Ensure font size is consistent */
+            border: 2px solid black;   /* Remove default border */
+            border-radius: 5px; /* Rounded corners */
+            background-color: transparent; /* Common background color */
+            color: black;   /* Common text color */
+            cursor: pointer; /* Pointer cursor for button */
+        }
+        
+        .common-button:hover {
+            opacity: 0.8; /* Slightly transparent on hover */
+        }
+
+        .info-box-button {
+            width: 90px;  /* Set a fixed width */
+            height: 40px; /* Set a fixed height */
+            border-radius: 5px; /* Rounded corners */
+            background-color: transparent; /* Common background color */
+            color: black; /* Common text color */
+            border: 1px solid black; /* Uniform border */
+            font-size: 15px; /* Consistent font size */
+            cursor: pointer; /* Pointer cursor on hover */
+            margin: 5px; /* Add some margin for spacing */
+        }
+
+        #resize-handle {
+            width: 10px;
+            height: 100%;
+            position: absolute;
+            right: -5px;
+            top: 0;
+            cursor: ew-resize;
+        }
+
+        #profile-modal, #confirm-modal {
+            display: none;
+            position: fixed;
+            z-index: 3; /* Higher z-index for confirmation modal */
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+
+        #modal-content, #confirm-content {
+            background-color: #fefefe;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 300px;
+            text-align: left;
+        }
+
+        .close, .confirm-button {
+            color: #fff;
+            background-color: #4CAF50;
+            border: none;
+            padding: 10px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .close:hover, .close:focus, .confirm-button:hover {
+            opacity: 0.8;
+        }
+
+        #logout-button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        input {
+            width: 100%;
+            margin-top: 5px;
+            padding: 5px;
+        }
+
+        #processes-list {
+            background-color: transparent;
+            border: none;
+            padding: 10px;
+            box-shadow: none;
+            height: 75%;
+            width: 100%;
+            text-align: left;
+            overflow-y: auto;
+        }
+
+        .process-item {
+            list-style-type: disc;
+            margin: 10px 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .selected {
+            background-color: #d0e7ff; /* Light blue background for highlighted state */
+            font-weight: bold; /* Optional: Make text bold */
+        }
+
+        .delete-button {
+            background-color: red;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 25px;
+            height: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            display: none;
+        }
+
+        .process-item:hover .delete-button {
+            display: block;
+        }
+
+        .info-button {
+            background-color: #4CAF50; /* Same as delete button */
+            color: white; /* Text color */
+            border: none; /* Remove default border */
+            border-radius: 50%; /* Make it circular */
+            width: 25px; /* Match dimensions */
+            height: 25px; /* Match dimensions */
+            cursor: pointer; /* Pointer cursor on hover */
+            display: none; /* Initially hidden */
+        }
+        
+        .process-item:hover .info-button {
+            display: inline-block; /* Show on hover */
+        }
+
+        /* Event Name Box */
+        #event-display {
+            display: none; /* Hidden by default */
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #fff;
+            border: 1px solid #888;
+            padding: 20px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+            z-index: 2; /* Lower z-index than confirmation modal */
+            width: 200px; /* Fixed width */
+            height: 60vh; /* 80% of the viewport height */
+            overflow-y: auto; /* Allow scrolling if content is long */
+            transition: width 0.3s ease;
+        }
+
+        #event-display h2 {
+            margin: 0;
+            font-size: 18px; /* Adjust font size for better visibility */
+        }
+
+        #event-close {
+            cursor: pointer;
+            color: #4CAF50;
+            float: right;
+            font-size: 18px;
+        }
+
+        #add-field-button {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        #note-modal {
+            display: none;
+            position: fixed;
+            z-index: 4; /* Higher z-index for note modal */
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+        
+        #modal-content {
+            background-color: #fefefe;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 300px;
+            text-align: left;
+        }
+
+        #error-modal {
+            display: none;
+            position: fixed;
+            z-index: 4; /* Higher z-index for error modal */
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+        
+        #modal-content {
+            background-color: #fefefe;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 300px;
+            text-align: left;
+        }
+        
+        .collapsed {
+            width: 0;
+            padding: 0;
+            opacity: 0; /* Optional: fade out effect */
+        }
+
+        #centered-container {
+            width: 800px; /* Width of the container */
+            height: 60vh; /* Height of the container */
+            background-color: rgba(200, 200, 200, 0.5); /* Light gray background for visibility */
+            border: 1px solid #888; /* Optional: border for visibility */
+            position: absolute; /* Positioning for centering */
+            top: 50%; /* Move down 50% from the top */
+            left: 50%; /* Move right 50% from the left */
+            transform: translate(-50%, -50%); /* Offset by half its width and height to center it */
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3); /* Optional: shadow for depth */
+        }
+
+        #notes-list {
+            list-style-type: none; /* Remove default list styling */
+            padding: 0; /* Remove default padding */
+            display: flex; /* Use flexbox for alignment */
+            align-items: center; /* Center items vertically if needed */
+            overflow-x: auto; /* Allow horizontal scrolling */
+            height: 90vh; /* Set a fixed height for the notes list */
+            width: 1100px; /* Width of each note box */
+            border: 1px solid transparent; /* Optional: border for visibility */
+            max-width: calc(100% - 20px); /* Set max width to avoid overflow issues */
+            margin-right: 20px; /* Space from the right edge of the screen */
+        }
+        
+        .note-box {
+            width: 400px; /* Width of each note box */
+            height: 80vh; /* Height of each note box */
+            background-color: rgba(255, 255, 255, 0.8); /* Light background for visibility */
+            border: 1px solid #888; /* Optional: border for visibility */
+            margin: 10px; /* Space between notes */
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2); /* Optional: shadow for depth */
+            flex-shrink: 0; /* Prevent boxes from shrinking */
+            display: flex; /* Use flexbox */
+            flex-direction: column; /* Stack items vertically */
+            padding: 10px; /* Add padding */
+            border-radius: 8px; /* Rounded corners */
+            align-items: center; /* Center items horizontally */
+        }
+
+        #notes-container {
+            display: flex; /* Use flex to align the contents */
+            justify-content: flex-end; /* Align the contents to the right */
+            margin-right: 20px; /* Space from the right edge of the screen */
+            width: calc(100% - 20px); /* Full width minus margin */
+        }
+
+        .delete-note {
+            background-color: red; /* Red background */
+            color: white; /* White text */
+            border: none; /* No border */
+            border-radius: 5px; /* Rounded corners */
+            padding: 8px; /* Padding for spacing */
+            cursor: pointer; /* Pointer cursor on hover */
+            display: inline-block; /* Make it inline-block */
+            align-self: center; /* Center the button horizontally */
+            margin-top: auto; /* Push the button to the bottom */
+            width: 70px;
+            height: 30px;
+        }
+        
+        .delete-note:hover {
+            opacity: 0.8; /* Slightly transparent on hover */
+        }
+
+        .note-box span {
+            margin-top: 5px; /* Add space between title and date */
+            display: block; /* Make the date a block element */
+        }
+
+        .tasks-button {
+            background-color: #4CAF50; /* Green background */
+            color: white; /* White text */
+            border: none; /* No border */
+            border-radius: 5px; /* Rounded corners */
+            padding: 10px; /* Padding for spacing */
+            cursor: pointer; /* Pointer cursor on hover */
+            width: 100%; /* Full width to match text box */
+            margin-top: 10px; /* Space between text box and button */
+        }
+        
+        .tasks-button:hover {
+            opacity: 0.8; /* Slightly transparent on hover */
+        }
+
+        #task-modal {
+            display: none;
+            position: fixed;
+            z-index: 4; /* Higher z-index for the modal */
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+        
+        #modal-content {
+            background-color: #fefefe;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 300px;
+            text-align: left;
+        }
+        
+        .close-task {
+            cursor: pointer;
+            float: right;
+            font-size: 18px;
+        }
+    </style>
+</head>
+<body>
+
+<button id="toggle-event-display", style="display: none;">
+    View Details
+</button>
+
+<div id="main-container" style="display: flex; flex-direction: column; align-items: center; margin: 20px;">
+        <button id="create-note-button" class="common-button">
+            Create Note
+        </button>
+    <div id="info-box" style="margin-top: 20px;">
+        <!-- Your info-box content here -->
+        <button id="profile-button" class="info-box-button">My Profile</button>
+        <button id="add-button" class="info-box-button">+</button>
+        <div id="processes-list">
+            <ul id="processes-ul"></ul>
+        </div>
+        <div id="resize-handle"></div>
+    </div>
+</div>
+
+<div id="profile-modal">
+    <div id="modal-content">
+        <span class="close-task" id="close-modal">&times;</span>
+        <h2>User Profile</h2>
+        <p><strong>Email:</strong> <span id="user-email"></span></p>
+        <p><strong>City:</strong> <span id="user-city"></span></p>
+        <p><strong>Company Name:</strong> <span id="user-company-name"></span></p>
+        <p><strong>Language:</strong> <span id="user-language"></span></p>
+        <button id="logout-button">Log Out</button>
+    </div>
+</div>
+
+<div id="confirm-modal">
+    <div id="confirm-content">
+        <p id="confirm-message">Are you sure you want to proceed?</p>
+        <input type="text" id="event-name" placeholder="Name" />
+        <input type="text" id="event-company" placeholder="Company name" />
+        <input type="text" id="event-field1" placeholder="Title" />
+        <input type="text" id="event-field2" placeholder="Primary Email" />
+        <input type="text" id="event-field3" placeholder="Secondary Email" />
+        <input type="text" id="event-field4" placeholder="Primary Phone Number" />
+        <input type="text" id="event-field5" placeholder="Secondary Phone Number" />
+        <button class="confirm-button" id="confirm-yes">Confirm</button>
+        <button class="close" id="confirm-no">Cancel</button>
+    </div>
+</div>
+
+<!-- Event Name Display Box -->
+<div id="event-display">
+    <h2 id="event-name-title">Name</h2>
+    <p><strong>Company:</strong> <span id="event-company-display"></span></p>
+    <input type="text" id="event-company-input" style="display: none;" placeholder="Enter company name" />
+    
+    <p><strong>Title:</strong> <span id="event-field1-display"></span></p>
+    <input type="text" id="event-field1-input" style="display: none;" placeholder="Enter Title" />
+    
+    <p><strong>Primary Email:</strong> <span id="event-field2-display"></span></p>
+    <input type="text" id="event-field2-input" style="display: none;" placeholder="Enter Primary Email" />
+
+    <p><strong>Secondary Email:</strong> <span id="event-field3-display"></span></p>
+    <input type="text" id="event-field3-input" style="display: none;" placeholder="Enter Secondary Email" />
+
+    <p><strong>Primary Phone Number:</strong> <span id="event-field4-display"></span></p>
+    <input type="text" id="event-field4-input" style="display: none;" placeholder="Enter Primary Phone Number" />
+
+    <p><strong>Secondary Phone Number:</strong> <span id="event-field5-display"></span></p>
+    <input type="text" id="event-field5-input" style="display: none;" placeholder="Enter Secondary Phone Number" />
+    
+    <button id="add-field-button">Modify Information</button>
+    <button id="confirm-update-button" style="display: none;">Confirm</button> <!-- Confirm button for updating -->
+
+    <button id="close-event-display" style="float: right;">Close</button>
+</div>
+
+<div id="note-modal" style="display: none;">
+    <div id="modal-content">
+        <span class="close" id="close-note-modal">&times;</span>
+        <h2>Create a New Note</h2>
+        <input type="text" id="note-title" placeholder="Enter note title" required />
+        <input type="date" id="note-date" required />
+        <button class="confirm-button" id="confirm-note-button">Create Note</button>
+    </div>
+</div>
+
+<div id="task-modal" style="display: none;">
+    <div id="modal-content">
+        <span class="close" id="close-task-modal">&times;</span>
+        <h2>Add a Task</h2>
+        <input type="text" id="task-name" placeholder="Enter task name" required />
+        <button id="confirm-task-button">Add Task</button>
+    </div>
+</div>
+
+<div id="error-modal" style="display: none;">
+    <div id="modal-content">
+        <p id="error-message">Please select a process first.</p>
+        <button class="confirm-button" id="confirm-error-button">OK</button>
+    </div>
+</div>
+
+<div id="notes-container">
+    <ul id="notes-list"></ul>
+    <div id="no-notes-message" style="display: none; text-align: center; margin: 20px;">
+        Choose a contact to display meeting note
+    </div>
+</div>
+    
+<script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyBNaUXaWjAbJIRebzl_ZpAxx32E_bfm9Sw",
+        authDomain: "upnotez.firebaseapp.com",
+        databaseURL: "https://upnotez-default-rtdb.firebaseio.com",
+        projectId: "upnotez",
+        storageBucket: "upnotez.firebasestorage.app",
+        messagingSenderId: "591185587641",
+        appId: "1:591185587641:web:c80bba260585ab41efda68"
+    };
+
+    const app = firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const database = firebase.database();
+
+    let currentAction = null;
+    let currentProcessId = null;
+
+    document.getElementById('profile-button').onclick = function() {
+        const user = auth.currentUser;
+
+        if (user) {
+            database.ref('users/' + user.uid).once('value').then((snapshot) => {
+                const userData = snapshot.val();
+                document.getElementById('user-email').innerText = userData.email;
+                document.getElementById('user-city').innerText = userData.city;
+                document.getElementById('user-company-name').innerText = userData.companyName;
+                document.getElementById('user-language').innerText = userData.language;
+
+                document.getElementById('profile-modal').style.display = "block";
+            }).catch((error) => {
+                console.error("Error fetching user data: ", error);
+            });
+        }
+    };
+
+    document.getElementById('close-modal').onclick = function() {
+        document.getElementById('profile-modal').style.display = "none";
+    };
+
+    window.onclick = function(event) {
+        if (event.target == document.getElementById('profile-modal')) {
+            document.getElementById('profile-modal').style.display = "none";
+        }
+        if (event.target == document.getElementById('confirm-modal')) {
+            document.getElementById('confirm-modal').style.display = "none";
+        }
+        if (event.target == document.getElementById('event-display')) {
+            document.getElementById('event-display').style.display = "none";
+        }
+    };
+
+    document.getElementById('logout-button').onclick = function() {
+        auth.signOut().then(() => {
+            window.location.href = 'index.html';
+        }).catch((error) => {
+            console.error("Error signing out: ", error);
+        });
+    };
+
+    document.getElementById('add-button').onclick = function() {
+        currentAction = 'add';
+        document.getElementById('confirm-message').innerText = "Are you sure you want to create a new event?";
+        document.getElementById('event-name').value = "";
+        document.getElementById('confirm-modal').style.display = "block";
+    };
+    
+    function loadProcesses() {
+        return new Promise((resolve, reject) => {
+            const user = auth.currentUser;
+            if (user) {
+                const processesRef = database.ref('users/' + user.uid + '/Processes');
+                processesRef.on('value', (snapshot) => {
+                    const processes = snapshot.val();
+                    const processesArray = [];
+    
+                    for (const key in processes) {
+                        if (processes.hasOwnProperty(key)) {
+                            processesArray.push({
+                                id: key,
+                                eventId: processes[key].eventId,
+                                name: processes[key].name,
+                                company: processes[key].company || "",
+                                field1: processes[key].field1 || "",
+                                field2: processes[key].field2 || "",
+                                field3: processes[key].field3 || "",
+                                field4: processes[key].field4 || "",
+                                field5: processes[key].field5 || ""
+                            });
+                        }
+                    }
+    
+                    // Sort processesArray by name
+                    processesArray.sort((a, b) => a.name.localeCompare(b.name));
+    
+                    const processesUl = document.getElementById('processes-ul');
+                    processesUl.innerHTML = '';
+    
+                    processesArray.forEach(process => {
+                        const li = document.createElement('li');
+                        li.className = 'process-item';
+                        li.setAttribute('data-id', process.id); // Add this line
+                        li.textContent = process.name || process.eventId; // Show event name or fallback to event ID
+    
+                        li.onclick = () => {
+                            // Remove 'selected' class from all items
+                            document.querySelectorAll('.process-item').forEach(item => {
+                                item.classList.remove('selected');
+                            });
+                            // Add 'selected' class to the clicked item
+                            li.classList.add('selected');
+                            
+                            document.getElementById('event-display').style.display = "none"; // Ensure it's hidden initially
+                            document.getElementById('event-name-title').innerText = process.name; // Set title to the event name
+                            document.getElementById('event-company-display').innerText = process.company || "N/A"; // Set company name or show "N/A"
+                            document.getElementById('event-field1-display').innerText = process.field1 || "N/A";
+                            document.getElementById('event-field2-display').innerText = process.field2 || "N/A";
+                            document.getElementById('event-field3-display').innerText = process.field3 || "N/A";
+                            document.getElementById('event-field4-display').innerText = process.field4 || "N/A";
+                            document.getElementById('event-field5-display').innerText = process.field5 || "N/A";
+                            currentProcessId = process.id; // Set currentProcessId here
+    
+                            // Load notes for the selected process
+                            loadNotes(currentProcessId);
+                        };
+    
+                        const deleteButton = document.createElement('button');
+                        deleteButton.className = 'delete-button';
+                        deleteButton.textContent = '-';
+                        deleteButton.onclick = (event) => {
+                            event.stopPropagation(); // Prevent the click from bubbling up to the li
+                            currentAction = 'delete';
+                            currentProcessId = process.id;
+                            const confirmDelete = confirm(`Are you sure you want to delete process ${process.name || process.eventId}?`);
+                            if (confirmDelete) {
+                                processesRef.child(currentProcessId).remove()
+                                    .then(() => loadProcesses())
+                                    .catch((error) => {
+                                        console.error("Error deleting event: ", error);
+                                    });
+                            }
+                        };
+                        
+                        // Create the "i" button
+                        const infoButton = document.createElement('button');
+                        infoButton.className = 'info-button';
+                        infoButton.textContent = 'i'; // Set text for the info button
+                        infoButton.style.marginLeft = '1px'; // Add some spacing
+    
+                        // Add click event to open the event-display
+                        infoButton.onclick = (event) => {
+                            event.stopPropagation(); // Prevent the click from bubbling up to the li
+                        
+                            currentProcessId = process.id; // Set current process ID
+                            document.getElementById('event-name-title').innerText = process.name; // Set title
+                            document.getElementById('event-company-display').innerText = process.company || "N/A"; // Set company name
+                            document.getElementById('event-field1-display').innerText = process.field1 || "N/A"; // Set Field 1
+                            document.getElementById('event-field2-display').innerText = process.field2 || "N/A"; // Set Field 2
+                            document.getElementById('event-field3-display').innerText = process.field3 || "N/A"; // Set Field 3
+                            document.getElementById('event-field4-display').innerText = process.field4 || "N/A"; // Set Field 4
+                            document.getElementById('event-field5-display').innerText = process.field5 || "N/A"; // Set Field 5
+                            document.getElementById('event-display').style.display = "block"; // Show the event display
+                        };
+                        
+                        li.appendChild(deleteButton);
+                        li.appendChild(infoButton);
+    
+                        processesUl.appendChild(li);
+                    });
+                    
+                    resolve(); // Resolve the promise after loading processes
+                }, (error) => {
+                    reject(error); // Reject the promise on error
+                });
+            } else {
+                reject(new Error("No user is logged in."));
+            }
+        });
+    }
+
+    function loadNotes(processId) {
+        const user = auth.currentUser;
+        const notesRef = database.ref(`users/${user.uid}/Processes/${processId}/Notes`);
+
+        // Clear previous notes and keep message visible initially
+        const notesList = document.getElementById('notes-list');
+        notesList.innerHTML = ''; // Clear previous notes
+
+        // Show the no-notes-message initially
+        const noNotesMessage = document.getElementById('no-notes-message');
+        noNotesMessage.style.display = 'none'; // Ensure it's visible
+    
+        notesRef.on('value', (snapshot) => {
+            const notes = snapshot.val();
+            const notesArray = [];
+    
+            for (const key in notes) {
+                if (notes.hasOwnProperty(key)) {
+                    notesArray.push({
+                        id: key,
+                        title: notes[key].title,
+                        date: notes[key].date,
+                        content: notes[key].content || "" // Get existing content or default to empty
+                    });
+                }
+            }
+    
+            notesArray.sort((a, b) => new Date(b.date) - new Date(a.date));
+    
+            const notesList = document.getElementById('notes-list');
+            notesList.innerHTML = '';
+
+            // Select the no-notes-message element
+            const noNotesMessage = document.getElementById('no-notes-message');
+
+            if (notesArray.length > 0) {
+                noNotesMessage.style.display = 'none'; // Hide the message
+                notesArray.forEach(note => {
+                    const noteBox = document.createElement('li');
+                    noteBox.className = 'note-box';
+        
+                    // Create a title element
+                    const titleElement = document.createElement('strong');
+                    titleElement.innerText = note.title;
+        
+                    // Create a date element
+                    const dateElement = document.createElement('span');
+                    dateElement.innerText = `Date: ${note.date}`;
+        
+                    // Create a text box
+                    const textBox = document.createElement('textarea');
+                    textBox.style.width = '375px'; // Set width to 200px
+                    textBox.style.height = '70vh'; // Set height to 70vh
+                    textBox.placeholder = 'Add your notes here...'; // Optional placeholder
+                    textBox.value = note.content; // Set existing content
+
+                    let lastSavedContent = textBox.value;
+                    let hasUnsavedChanges = false; // Track unsaved changes
+
+                    textBox.addEventListener('input', () => {
+                        hasUnsavedChanges = textBox.value !== lastSavedContent; // Check for changes
+                        saveButton.style.backgroundColor = hasUnsavedChanges ? '#FF5E00' : '#d3d3d3'; // Change color
+                    });
+
+                    // Create the Tasks button
+                    const tasksButton = document.createElement('button');
+                    tasksButton.innerText = 'Tasks';
+                    tasksButton.className = 'tasks-button'; // Add a class for styling
+                    tasksButton.style.width = '100%'; // Set width to 100% to match the text box
+
+                    // Add event listener for the Tasks button
+                    tasksButton.onclick = function() {
+                        document.getElementById('task-modal').style.display = "block"; // Show the task modal
+
+                        // Store the current note ID in a variable
+                        document.getElementById('confirm-task-button').setAttribute('data-note-id', note.id);
+                    };
+
+    
+                    // Create the Save button
+                    const saveButton = document.createElement('button');
+                    saveButton.className = 'save-note';
+                    saveButton.innerText = 'Save';
+                    saveButton.style.marginTop = '10px'; // Add margin
+                    saveButton.style.backgroundColor = '#d3d3d3'; // Default color
+                    saveButton.style.border = '1px solid black'; // Thin black border
+                    saveButton.style.borderRadius = '5px'; // Rounded corners
+                    saveButton.style.zIndex = '5'; // Set z-index to 5
+
+                    saveButton.onclick = function() {
+                        const newContent = textBox.value; // Get new content
+                        updateContent(newContent, note.id); // Save the current content using the note ID
+                        lastSavedContent = textBox.value; // Update last saved content
+                        hasUnsavedChanges = false; // Reset change tracking
+                        saveButton.style.backgroundColor = '#d3d3d3'; // Reset button color
+                        saveButton.style.width = '70px'; // Set width
+                        saveButton.style.height = '30px'; // Set height
+                    };
+                
+                    // Append the title, date, text box, and save button to the note box
+                    noteBox.appendChild(titleElement);
+                    noteBox.appendChild(dateElement);
+                    noteBox.appendChild(textBox); // Add the text box here
+                    // noteBox.appendChild(tasksButton);
+                    noteBox.appendChild(saveButton);
+                    notesList.appendChild(noteBox);
+        
+                    // Create the delete button
+                    const deleteButton = document.createElement('button');
+                    deleteButton.className = 'delete-note';
+                    deleteButton.innerText = 'Delete';
+                    deleteButton.style.marginTop = '10px'; // Add margin
+        
+                    // Delete button functionality
+                    deleteButton.onclick = function() {
+                        const confirmDelete = confirm(`Are you sure you want to delete the note titled "${note.title}"?`);
+                        if (confirmDelete) {
+                            notesRef.child(note.id).remove()
+                                .then(() => {
+                                    console.log("Note deleted successfully.");
+                                    loadNotes(processId); // Reload notes after deletion
+                                })
+                                .catch((error) => {
+                                    console.error("Error deleting note:", error);
+                                });
+                        }
+                    };
+        
+                    // Append the delete button to the note box
+                    noteBox.appendChild(deleteButton);
+                    notesList.appendChild(noteBox);
+                    noteBox.appendChild(saveButton); // Add the save button here
+                });
+            }
+        });
+    }
+
+    function updateContent(content, noteId) {
+        const user = auth.currentUser;
+        const notesRef = database.ref(`users/${user.uid}/Processes/${currentProcessId}/Notes/${noteId}`);
+        
+        notesRef.update({ content: content })
+            .then(() => {
+                console.log("Note content saved successfully.");
+            })
+            .catch((error) => {
+                console.error("Error saving note content:", error);
+            });
+    }
+
+    document.getElementById('confirm-yes').onclick = function() {
+        const user = auth.currentUser;
+        const processesRef = database.ref('users/' + user.uid + '/Processes');
+    
+        if (currentAction === 'add') {
+            const eventName = document.getElementById('event-name').value;
+            const companyValue = document.getElementById('event-company').value;
+            const field1Value = document.getElementById('event-field1').value;
+            const field2Value = document.getElementById('event-field2').value;
+            const field3Value = document.getElementById('event-field3').value;
+            const field4Value = document.getElementById('event-field4').value;
+            const field5Value = document.getElementById('event-field5').value;
+            
+            const newEventRef = processesRef.push();
+            const eventId = newEventRef.key;
+    
+            newEventRef.set({ 
+                eventId: eventId, 
+                name: eventName,
+                company: companyValue, // Add the Company field as an empty string
+                field1: field1Value, // New Field 1
+                field2: field2Value,  // New Field 2
+                field3: field3Value, // New Field 3
+                field4: field4Value, // New Field 4
+                field5: field5Value // New Field 5
+            })
+            .then(() => {
+                // Store the new event ID in local storage
+                localStorage.setItem('newEventId', eventId);
+                localStorage.setItem('currentProcessId', eventId); // Store currentProcessId as well
+                loadProcesses();
+
+                // After loading processes, select the new event
+                loadProcesses().then(() => {
+                    const listItem = document.querySelector(`.process-item[data-id="${eventId}"]`);
+                    if (listItem) {
+                        listItem.click(); // Simulate click on the new process
+                    }
+                });
+                
+                document.getElementById('confirm-modal').style.display = "none";
+    
+                // Refresh the page
+                // location.reload(); // This will refresh the page
+            })
+            .catch((error) => {
+                console.error("Error adding new event: ", error);
+            });
+        }
+    };
+
+    document.getElementById('confirm-no').onclick = function() {
+        document.getElementById('confirm-modal').style.display = "none";
+    };
+
+    document.getElementById('add-field-button').onclick = function() {
+        const companyDisplay = document.getElementById('event-company-display');
+        const field1Display = document.getElementById('event-field1-display');
+        const field2Display = document.getElementById('event-field2-display');
+        const field3Display = document.getElementById('event-field3-display');
+        const field4Display = document.getElementById('event-field4-display');
+        const field5Display = document.getElementById('event-field5-display');
+    
+        const companyInput = document.getElementById('event-company-input');
+        const field1Input = document.getElementById('event-field1-input');
+        const field2Input = document.getElementById('event-field2-input');
+        const field3Input = document.getElementById('event-field3-input');
+        const field4Input = document.getElementById('event-field4-input');
+        const field5Input = document.getElementById('event-field5-input');
+        const confirmButton = document.getElementById('confirm-update-button');
+    
+        if (companyInput.style.display === "none") {
+            // Show input fields and confirm button
+            companyInput.style.display = "block"; 
+            field1Input.style.display = "block"; 
+            field2Input.style.display = "block"; 
+            field3Input.style.display = "block";
+            field4Input.style.display = "block";
+            field5Input.style.display = "block";
+    
+            companyInput.value = companyDisplay.innerText; // Set input value to current company
+            field1Input.value = field1Display.innerText; // Set input value to current Field 1
+            field2Input.value = field2Display.innerText; // Set input value to current Field 2
+            field3Input.value = field3Display.innerText; // Set input value to current Field 3
+            field4Input.value = field4Display.innerText; // Set input value to current Field 4
+            field5Input.value = field5Display.innerText; // Set input value to current Field 5
+            
+            companyDisplay.style.display = "none"; // Hide display
+            field1Display.style.display = "none"; // Hide display
+            field2Display.style.display = "none"; // Hide display
+            field3Display.style.display = "none"; // Hide display
+            field4Display.style.display = "none"; // Hide display
+            field5Display.style.display = "none"; // Hide display
+            
+            this.innerText = "Cancel"; // Change button text to "Cancel"
+            confirmButton.style.display = "block"; // Show confirm button
+        } else {
+            // Hide input fields and confirm button
+            companyInput.style.display = "none"; 
+            field1Input.style.display = "none"; 
+            field2Input.style.display = "none"; 
+            field3Input.style.display = "none";
+            field4Input.style.display = "none";
+            field5Input.style.display = "none";
+            
+            companyDisplay.style.display = "inline"; // Show display again
+            field1Display.style.display = "inline"; // Show display again
+            field2Display.style.display = "inline"; // Show display again
+            field3Display.style.display = "inline"; // Show display again
+            field4Display.style.display = "inline"; // Show display again
+            field5Display.style.display = "inline"; // Show display again
+            
+            this.innerText = "Modify Information"; // Reset button text
+            confirmButton.style.display = "none"; // Hide confirm button
+        }
+    };
+
+    document.getElementById('confirm-update-button').onclick = function() {
+        const user = auth.currentUser;
+        const companyValue = document.getElementById('event-company-input').value;
+        const field1Value = document.getElementById('event-field1-input').value;
+        const field2Value = document.getElementById('event-field2-input').value;
+        const field3Value = document.getElementById('event-field3-input').value;
+        const field4Value = document.getElementById('event-field4-input').value;
+        const field5Value = document.getElementById('event-field5-input').value;
+        const processesRef = database.ref('users/' + user.uid + '/Processes');
+    
+        if (currentProcessId) {
+            processesRef.child(currentProcessId).update({ 
+                company: companyValue, 
+                field1: field1Value, 
+                field2: field2Value, 
+                field3: field3Value,
+                field4: field4Value,
+                field5: field5Value
+            })
+            .then(() => {
+                console.log("Database updated successfully.");
+                // Refresh the display
+                document.getElementById('event-company-display').innerText = companyValue;
+                document.getElementById('event-field1-display').innerText = field1Value;
+                document.getElementById('event-field2-display').innerText = field2Value;
+                document.getElementById('event-field3-display').innerText = field3Value;
+                document.getElementById('event-field4-display').innerText = field4Value;
+                document.getElementById('event-field5-display').innerText = field5Value;
+                // Hide input fields
+                document.getElementById('event-company-input').style.display = "none";
+                document.getElementById('event-field1-input').style.display = "none";
+                document.getElementById('event-field2-input').style.display = "none";
+                document.getElementById('event-field3-input').style.display = "none";
+                document.getElementById('event-field4-input').style.display = "none";
+                document.getElementById('event-field5-input').style.display = "none";
+                document.getElementById('add-field-button').innerText = "Modify Information"; // Reset button text
+                document.getElementById('confirm-update-button').style.display = "none"; // Hide confirm button
+
+                localStorage.setItem('currentProcessId', currentProcessId);
+                // location.reload(); // This will refresh the page
+            })
+            .catch((error) => {
+                console.error("Error updating fields: ", error);
+            });
+        } else {
+            console.error("No current process ID set.");
+        }
+    };
+
+    auth.onAuthStateChanged((user) => {
+        if (user) {
+            loadProcesses();
+
+            // Set initial display state for event-display
+            const eventDisplay = document.getElementById('event-display');
+            const toggleButton = document.getElementById('toggle-event-display');
+    
+            // Start with the event-display hidden
+            eventDisplay.style.display = "none"; // Initially hidden
+            toggleButton.innerText = 'View Details'; // Set button text
+    
+            // Check for currentProcessId in local storage
+            const storedProcessId = localStorage.getItem('currentProcessId');
+            if (storedProcessId) {
+                currentProcessId = storedProcessId; // Set currentProcessId from local storage
+                const processesRef = database.ref('users/' + user.uid + '/Processes');
+                processesRef.child(currentProcessId).once('value').then((snapshot) => {
+                    const process = snapshot.val();
+                    if (process) {
+                        document.getElementById('event-name-title').innerText = process.name; // Set title to the event name
+                        document.getElementById('event-company-display').innerText = process.company || "N/A"; // Set company name
+                        document.getElementById('event-field1-display').innerText = process.field1 || "N/A"; // Set Field 1
+                        document.getElementById('event-field2-display').innerText = process.field2 || "N/A"; // Set Field 2
+                        document.getElementById('event-field3-display').innerText = process.field3 || "N/A"; // Set Field 3
+                        document.getElementById('event-field4-display').innerText = process.field4 || "N/A"; // Set Field 4
+                        document.getElementById('event-field5-display').innerText = process.field5 || "N/A"; // Set Field 5
+    
+                        // Show the event name box
+                        document.getElementById('event-display').style.display = "block"; 
+                    }
+                }).catch((error) => {
+                    console.error("Error fetching process data: ", error);
+                });
+                localStorage.removeItem('currentProcessId'); // Clear after using
+            }
+    
+            // Check for new event ID (if applicable)
+            const newEventId = localStorage.getItem('newEventId');
+            if (newEventId) {
+                const processesRef = database.ref('users/' + user.uid + '/Processes');
+                processesRef.child(newEventId).once('value').then((snapshot) => {
+                    const process = snapshot.val();
+                    if (process) {
+                        document.getElementById('event-name-title').innerText = process.name; // Set title to the event name
+                        document.getElementById('event-field1-display').innerText = process.field1 || "N/A";
+                        document.getElementById('event-field2-display').innerText = process.field2 || "N/A";
+                        document.getElementById('event-field3-display').innerText = process.field3 || "N/A";
+                        document.getElementById('event-field4-display').innerText = process.field4 || "N/A";
+                        document.getElementById('event-field5-display').innerText = process.field5 || "N/A";
+                        document.getElementById('event-company-display').innerText = process.company || "N/A"; // Set company name
+                        document.getElementById('event-display').style.display = "block"; // Show the event name box
+                    }
+                });
+                localStorage.removeItem('newEventId'); // Clear after using
+            }
+        }
+    });
+
+    document.getElementById('create-note-button').onclick = function() {
+        if (!currentProcessId) {
+            document.getElementById('error-modal').style.display = "block"; // Show the error modal
+            return; // Stop further execution
+        }
+        document.getElementById('note-modal').style.display = "block"; // Show the note modal if a process is selected
+    };
+    
+    document.getElementById('confirm-error-button').onclick = function() {
+        document.getElementById('error-modal').style.display = "none"; // Close the modal
+    };
+
+    document.getElementById('toggle-event-display').onclick = function() {
+        const eventDisplay = document.getElementById('event-display');
+    
+        // Toggle visibility
+        if (eventDisplay.style.display === "none") {
+            eventDisplay.style.display = "block"; // Show the element
+            this.innerText = 'Hide Details'; // Change button text
+        } else {
+            eventDisplay.style.display = "none"; // Hide the element
+            this.innerText = 'View Details'; // Change button text
+        }
+    };
+
+    document.getElementById('confirm-note-button').onclick = function() {
+        const user = auth.currentUser;
+        const noteTitle = document.getElementById('note-title').value;
+        const noteDate = document.getElementById('note-date').value;
+    
+        if (user && currentProcessId) {
+            const notesRef = database.ref(`users/${user.uid}/Processes/${currentProcessId}/Notes`);
+            const newNoteRef = notesRef.push(); // Create a new note reference
+            const noteData = {
+                title: noteTitle,
+                date: noteDate,
+                createdAt: new Date().toISOString() // Timestamp for when the note was created
+            };
+    
+            // Set the new note in the database
+            newNoteRef.set(noteData)
+                .then(() => {
+                    console.log("New note created successfully:", noteData);
+                    document.getElementById('note-modal').style.display = "none"; // Hide the modal
+                    document.getElementById('note-title').value = ""; // Clear input
+                    document.getElementById('note-date').value = ""; // Clear input
+                    // Optionally update the UI to reflect the new note
+                })
+                .catch((error) => {
+                    console.error("Error creating note:", error);
+                });
+        } else {
+            console.log("No user is logged in or no process selected.");
+        }
+    };
+    
+    // Close the task modal when the close button is clicked
+    document.getElementById('close-task-modal').onclick = function() {
+        document.getElementById('task-modal').style.display = "none"; // Hide the modal
+    };
+    
+    document.getElementById('confirm-task-button').onclick = function() {
+        const taskName = document.getElementById('task-name').value;
+        const user = auth.currentUser;
+    
+        if (user && currentProcessId) {
+            const noteId = this.getAttribute('data-note-id'); // Get the note ID
+            const tasksRef = database.ref(`users/${user.uid}/Processes/${currentProcessId}/Notes/${noteId}/Tasks`);
+    
+            tasksRef.once('value', (snapshot) => {
+                if (!snapshot.exists()) {
+                    // If no Tasks path exists, create it
+                    tasksRef.set({ [Date.now()]: taskName }) // Use timestamp as unique key
+                        .then(() => {
+                            console.log("Task added successfully.");
+                            document.getElementById('task-modal').style.display = "none"; // Hide the modal
+                            document.getElementById('task-name').value = ""; // Clear input
+                        })
+                        .catch((error) => {
+                            console.error("Error adding task:", error);
+                        });
+                } else {
+                    // If Tasks path exists, add a new task under it
+                    tasksRef.child(Date.now()).set(taskName) // Use timestamp as unique key
+                        .then(() => {
+                            console.log("Task added successfully.");
+                            document.getElementById('task-modal').style.display = "none"; // Hide the modal
+                            document.getElementById('task-name').value = ""; // Clear input
+                        })
+                        .catch((error) => {
+                            console.error("Error adding task:", error);
+                        });
+                }
+            });
+        } else {
+            console.log("No user is logged in or no note selected.");
+        }
+    };
+
+    document.getElementById('close-event-display').onclick = function() {
+        document.getElementById('event-display').style.display = "none"; // Hide the event display
+    };
+
+    document.getElementById('close-note-modal').onclick = function() {
+        document.getElementById('note-modal').style.display = "none";
+    };
+
+    const resizeHandle = document.getElementById('resize-handle');
+    let isResizing = false;
+
+    resizeHandle.addEventListener('mousedown', (e) => {
+        isResizing = true;
+    });
+
+    window.addEventListener('mousemove', (e) => {
+        if (isResizing) {
+            const newWidth = e.clientX - document.getElementById('info-box').getBoundingClientRect().left;
+            if (newWidth > 50) {
+                document.getElementById('info-box').style.width = newWidth + 'px';
+            }
+        }
+    });
+
+    window.addEventListener('mouseup', () => {
+        isResizing = false;
+    });
+</script>
+
+</body>
+</html>
