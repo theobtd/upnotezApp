@@ -368,9 +368,24 @@
             float: right;
             font-size: 18px;
         }
+
+        #toggle-menu-button {
+            font-size: 16px;
+            border: 2px solid black;
+            border-radius: 5px;
+            background-color: #4CAF50;
+            color: white;
+            cursor: pointer;
+        }
+        
+        #toggle-menu-button:hover {
+            opacity: 0.8;
+        }
     </style>
 </head>
 <body>
+
+<button id="toggle-menu-button" style="margin: 20px; padding: 10px;">Hide Menu</button>
 
 <button id="toggle-event-display", style="display: none;">
     View Details
@@ -1159,6 +1174,20 @@
     window.addEventListener('mouseup', () => {
         isResizing = false;
     });
+
+    document.getElementById('toggle-menu-button').onclick = function() {
+        const menu = document.getElementById('info-box'); // Assume 'info-box' is your menu
+        if (menu.style.display === "none" || menu.style.display === "") {
+            menu.style.display = "block"; // Show the menu
+            this.innerText = "Hide Menu"; // Change button text
+        } else {
+            menu.style.display = "none"; // Hide the menu
+            this.innerText = "Show Menu"; // Change button text
+        }
+    };
+    
+    // Initially hide the menu
+    document.getElementById('info-box').style.display = "block"; // Ensure the menu is visible initially
 </script>
 
 </body>
