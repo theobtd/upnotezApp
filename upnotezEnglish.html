@@ -1340,10 +1340,13 @@
 
     document.getElementById('toggle-main-container').onclick = function() {
         const mainContainer = document.getElementById('main-container');
+        const notesContainer = document.getElementById('notes-container'); // Reference to notes-container
         if (mainContainer.style.display === 'none' || mainContainer.style.display === '') {
             mainContainer.style.display = 'flex'; // Show the container
+            notesContainer.style.display = 'block'; // Show notes-container when main-container is displayed
         } else {
             mainContainer.style.display = 'none'; // Hide the container
+            notesContainer.style.display = 'none'; // Hide notes-container when main-container is hidden
         }
     };
 
