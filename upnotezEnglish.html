@@ -1349,13 +1349,13 @@
         const createNoteButton = document.getElementById('create-note-button'); // Reference to create-note-button
         
         if (mainContainer.style.display === 'none' || mainContainer.style.display === '') {
-            mainContainer.style.display = 'none'; // Hide the container
-            notesContainer.style.display = 'block'; // Show notes-container when main-container is displayed
-            createNoteButton.style.display = 'block'; // Show create-note-button when notes-container is displayed
+            mainContainer.style.display = 'flex'; // Hide the container
+            notesContainer.style.display = 'none'; // Show notes-container when main-container is displayed
+            createNoteButton.style.display = 'none'; // Show create-note-button when notes-container is displayed
         } else {
-            mainContainer.style.display = 'flex'; // Show the container
-            notesContainer.style.display = 'none'; // Hide notes-container when main-container is hidden
-            createNoteButton.style.display = 'none'; // Hide create-note-button when main-container is hidden
+            mainContainer.style.display = 'none'; // Show the container
+            notesContainer.style.display = 'block'; // Hide notes-container when main-container is hidden
+            createNoteButton.style.display = 'block'; // Hide create-note-button when main-container is hidden
         }
     };
 
