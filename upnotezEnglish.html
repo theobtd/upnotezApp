@@ -1117,6 +1117,10 @@
 
     auth.onAuthStateChanged((user) => {
         if (user) {
+            // Show main-container and hide notes-container on first login
+            document.getElementById('main-container').style.display = 'flex'; // Ensure main-container is visible
+            document.getElementById('notes-container').style.display = 'none'; // Ensure notes-container is hidden
+
             loadProcesses();
     
             // Fetch user data
